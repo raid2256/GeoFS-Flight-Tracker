@@ -1,9 +1,10 @@
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyATDhuV86g9Pa0r6remuusjO1-QLHWhEEI",
   authDomain: "geofs-radar-f163b.firebaseapp.com",
   databaseURL: "https://geofs-radar-f163b-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "geofs-radar-f163b",
-  storageBucket: "geofs-radar-f163b.firebasestorage.app",
+  storageBucket: "geofs-radar-f163b.appspot.com",
   messagingSenderId: "218546405445",
   appId: "1:218546405445:web:9e1c4854f9bbb55764e32c"
 };
@@ -11,7 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Handle form submission
+// Handle Flight Submission
 document.getElementById("flightForm").addEventListener("submit", e => {
   e.preventDefault();
   const data = {
@@ -28,24 +29,39 @@ document.getElementById("flightForm").addEventListener("submit", e => {
   flightForm.reset();
 });
 
-// Load flights
+// Display Active Flights Only
 db.ref("flights").on("value", snap => {
   flightList.innerHTML = "";
   const now = Date.now();
-  Object.entries(snap.val() || {}).forEach(([id, f]) => {
-    const dep = new Date(f.schedDep).getTime();
+  const flights = snap.val() || {};
+
+  Object.entries(flights).forEach(([id, f]) => {
+    const isComplete = !!f.completed;
+    if (isComplete) return; // 🔒 Skip completed flights
+
+    const sched = new Date(f.schedDep).getTime();
     const eta = new Date(f.eta).getTime();
-    const progress = Math.min(100, Math.max(0, ((now - dep) / (eta - dep)) * 100));
-    const delay = now > eta ? "🔴 Delayed" : "🟢 On-Time";
+    const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
 
     const div = document.createElement("div");
     div.className = "flightCard";
     div.innerHTML = `
       <strong>${f.callsign}</strong> | ${f.aircraft}<br>
       🛫 ${f.dep} → 🛬 ${f.arr}<br>
-      Progress: ${progress.toFixed(0)}%<br>
-      Status: ${delay}
+      Progress: ${progress.toFixed(0)}%
     `;
+
+    const endBtn = document.createElement("button");
+    endBtn.textContent = "✅ End Flight";
+    endBtn.style.marginTop = "10px";
+    endBtn.onclick = () => {
+      db.ref("flights/" + id).update({
+        completed: true,
+        endTime: Date.now()
+      });
+    };
+    div.appendChild(endBtn);
+
     flightList.appendChild(div);
   });
 });
