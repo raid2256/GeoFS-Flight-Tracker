@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GeoFS Flight Portal</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>🛫 Start Your Flight</h1>
+  <form id="flightForm">
+    <input type="text" id="callsign" placeholder="Callsign (e.g. QF5)" required />
+    <input type="text" id="aircraft" placeholder="Aircraft (e.g. A320)" required />
+    <input type="text" id="dep" placeholder="Departure ICAO" required />
+    <input type="text" id="arr" placeholder="Arrival ICAO" required />
+    <input type="datetime-local" id="schedDep" required />
+    <input type="datetime-local" id="eta" required />
+    <button type="submit">Start Flight</button>
+  </form>
+
+  <h2>🟢 Active Flights</h2>
+  <div id="flightList"></div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
