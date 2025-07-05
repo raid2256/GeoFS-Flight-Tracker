@@ -12,14 +12,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 🔐 Anonymous Auth
-firebase.auth().signInAnonymously().catch(console.error);
-
-// ✈️ Submit Flight
-document.getElementById("flightForm").addEventListener("submit", async e => {
+// Flight Submission
+document.getElementById("flightForm").addEventListener("submit", e => {
   e.preventDefault();
-  const user = firebase.auth().currentUser;
-  if (!user) return alert("Not signed in yet!");
 
   const data = {
     callsign: callsign.value,
@@ -28,62 +23,55 @@ document.getElementById("flightForm").addEventListener("submit", async e => {
     arr: arr.value.toUpperCase(),
     schedDep: new Date(schedDep.value).toISOString(),
     eta: new Date(eta.value).toISOString(),
-    timestamp: Date.now(),
-    uid: user.uid
+    timestamp: Date.now()
   };
 
   const id = "FLT_" + Date.now();
-  await db.ref("flights/" + id).set(data);
+  db.ref("flights/" + id).set(data);
   flightForm.reset();
 });
 
-// 🖥️ Listen for Flights (after auth)
-firebase.auth().onAuthStateChanged(user => {
-  if (!user) return;
+// Display Flights
+db.ref("flights").on("value", snap => {
+  flightList.innerHTML = "";
+  const now = Date.now();
+  const flights = snap.val() || {};
 
-  db.ref("flights").on("value", snap => {
-    flightList.innerHTML = "";
-    const now = Date.now();
-    const flights = snap.val() || {};
+  Object.entries(flights).forEach(([id, f]) => {
+    if (f.completed) return;
 
-    Object.entries(flights).forEach(([id, f]) => {
-      if (f.completed) return;
+    const sched = new Date(f.schedDep).getTime();
+    const eta = new Date(f.eta).getTime();
+    const start = f.timestamp || sched;
+    const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
 
-      const sched = new Date(f.schedDep).getTime();
-      const eta = new Date(f.eta).getTime();
-      const start = f.timestamp || sched;
-      const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
+    let status;
+    if (start > sched) {
+      status = "🔴 Delayed Departure";
+    } else if (now > eta) {
+      status = "🟡 Arriving Late";
+    } else {
+      status = "🟢 On Time";
+    }
 
-      // 🛠️ Status logic
-      let status;
-      if (start > sched) {
-        status = "🔴 Delayed Departure";
-      } else if (now > eta) {
-        status = "🟡 Arriving Late";
-      } else {
-        status = "🟢 On Time";
-      }
+    const div = document.createElement("div");
+    div.className = "flightCard";
+    div.innerHTML = `
+      <strong>${f.callsign}</strong> | ${f.aircraft}<br>
+      🛫 ${f.dep} → 🛬 ${f.arr}<br>
+      Progress: ${progress.toFixed(0)}%<br>
+      Status: ${status}
+    `;
 
-      const div = document.createElement("div");
-      div.className = "flightCard";
-      div.innerHTML = `
-        <strong>${f.callsign}</strong> | ${f.aircraft}<br>
-        🛫 ${f.dep} → 🛬 ${f.arr}<br>
-        Progress: ${progress.toFixed(0)}%<br>
-        Status: ${status}
-      `;
+    const endBtn = document.createElement("button");
+    endBtn.textContent = "✅ End Flight";
+    endBtn.style.marginTop = "10px";
+    endBtn.onclick = () => {
+      const endTime = Date.now();
+      const delay = start > sched ? start - sched : 0;
+      const duration = endTime - start;
 
-      // 🧑‍✈️ Only show “End Flight” if user is owner
-      if (user.uid === f.uid) {
-        const endBtn = document.createElement("button");
-        endBtn.textContent = "✅ End Flight";
-        endBtn.style.marginTop = "10px";
-        endBtn.onclick = () => {
-          const endTime = Date.now();
-          const delay = start > sched ? start - sched : 0;
-          const duration = endTime - start;
-
-          alert(`🧾 Flight Summary:
+      alert(`🧾 Flight Summary:
 Callsign: ${f.callsign}
 Aircraft: ${f.aircraft}
 Route: ${f.dep} → ${f.arr}
@@ -91,15 +79,13 @@ Status: ${status}
 Flight Duration: ${(duration / 60000).toFixed(0)} min
 Delay: ${delay > 0 ? "+" + (delay / 60000).toFixed(0) + " min" : "None"}`);
 
-          db.ref("flights/" + id).update({
-            completed: true,
-            endTime
-          });
-        };
-        div.appendChild(endBtn);
-      }
+      db.ref("flights/" + id).update({
+        completed: true,
+        endTime
+      });
+    };
 
-      flightList.appendChild(div);
-    });
+    div.appendChild(endBtn);
+    flightList.appendChild(div);
   });
 });
