@@ -1,16 +1,26 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>GeoFS Public Radar</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radar Home</title>
+
+  <!-- ✅ This is the working CSS link -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>🌐 Public Flight Feed</h1>
-  <p>This is a public, read-only radar. <a href="dashboard.html">Sign in</a> to submit and manage flights.
 
-  <div id="publicFlightList"></div>
+  <h1>GEFS Radar Display</h1>
+  <p>View live flights or sign in to manage your own:</p>
+
+  <!-- Example public flight list output -->
+  <div id="flightList">
+    <!-- Flight cards injected here -->
+  </div>
+
+  <a href="dashboard.html">
+    <button>🚪 Sign In</button>
+  </a>
 
   <script src="public.js"></script>
 </body>
