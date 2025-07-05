@@ -15,8 +15,10 @@ const db = firebase.database();
 // Auth UI
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
+const usernameInput = document.getElementById("username"); // NEW username input
 const userInfo = document.getElementById("userInfo");
 
+// Login
 document.getElementById("loginBtn").onclick = () => {
   firebase.auth().signInWithEmailAndPassword(
     emailInput.value.trim(),
@@ -24,12 +26,24 @@ document.getElementById("loginBtn").onclick = () => {
   ).catch(err => alert("Login Error: " + err.message));
 };
 
+// Signup with username
 document.getElementById("signupBtn").onclick = () => {
-  firebase.auth().createUserWithEmailAndPassword(
-    emailInput.value.trim(),
-    passwordInput.value.trim()
-  ).then(() => alert("Account created! You're now signed in."))
-  .catch(err => alert("Signup Error: " + err.message));
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+  const username = usernameInput.value.trim();
+
+  if (!username) {
+    alert("Please enter a username.");
+    return;
+  }
+
+  firebase.auth().createUserWithEmailAndPassword(email, password)
+    .then(cred => {
+      const uid = cred.user.uid;
+      db.ref("users/" + uid).set({ username });
+      alert("Account created! You're now signed in.");
+    })
+    .catch(err => alert("Signup Error: " + err.message));
 };
 
 // Auth State Listener
@@ -44,10 +58,14 @@ firebase.auth().onAuthStateChanged(user => {
     return;
   }
 
+  // Show signed-in user + username
   flightForm.style.display = "block";
-  userInfo.textContent = `👤 Signed in as ${user.email}`;
+  db.ref("users/" + user.uid + "/username").once("value").then(snap => {
+    const uname = snap.val() || "Unknown Pilot";
+    userInfo.innerHTML = `👤 Welcome, <strong>${uname}</strong><br>${user.email}`;
+  });
 
-  // Submit New Flight
+  // Submit new flight
   document.getElementById("flightForm").addEventListener("submit", e => {
     e.preventDefault();
     const data = {
@@ -65,7 +83,7 @@ firebase.auth().onAuthStateChanged(user => {
     flightForm.reset();
   });
 
-  // Display Flights (User-only)
+  // Display user's active flights
   db.ref("flights").on("value", snap => {
     flightList.innerHTML = "";
     const now = Date.now();
@@ -81,13 +99,9 @@ firebase.auth().onAuthStateChanged(user => {
       const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
 
       let status;
-      if (start > sched) {
-        status = "🔴 Delayed Departure";
-      } else if (now > eta) {
-        status = "🟡 Arriving Late";
-      } else {
-        status = "🟢 On Time";
-      }
+      if (start > sched) status = "🔴 Delayed Departure";
+      else if (now > eta) status = "🟡 Arriving Late";
+      else status = "🟢 On Time";
 
       const div = document.createElement("div");
       div.className = "flightCard";
