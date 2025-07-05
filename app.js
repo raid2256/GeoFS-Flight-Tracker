@@ -1,4 +1,4 @@
-// Firebase Config
+// Initialize Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyATDhuV86g9Pa0r6remuusjO1-QLHWhEEI",
   authDomain: "geofs-radar-f163b.firebaseapp.com",
@@ -12,9 +12,16 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Handle Flight Submission
-document.getElementById("flightForm").addEventListener("submit", e => {
+// Sign in anonymously on load
+firebase.auth().signInAnonymously().catch(console.error);
+
+// Flight form handler
+document.getElementById("flightForm").addEventListener("submit", async e => {
   e.preventDefault();
+
+  const user = firebase.auth().currentUser;
+  if (!user) return alert("Not signed in.");
+
   const data = {
     callsign: callsign.value,
     aircraft: aircraft.value,
@@ -22,18 +29,21 @@ document.getElementById("flightForm").addEventListener("submit", e => {
     arr: arr.value.toUpperCase(),
     schedDep: new Date(schedDep.value).toISOString(),
     eta: new Date(eta.value).toISOString(),
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    uid: user.uid
   };
+
   const id = "FLT_" + Date.now();
-  db.ref("flights/" + id).set(data);
+  await db.ref("flights/" + id).set(data);
   flightForm.reset();
 });
 
-// Display Active Flights
+// Display active flights
 db.ref("flights").on("value", snap => {
   flightList.innerHTML = "";
   const now = Date.now();
   const flights = snap.val() || {};
+  const user = firebase.auth().currentUser;
 
   Object.entries(flights).forEach(([id, f]) => {
     if (f.completed) return;
@@ -41,10 +51,9 @@ db.ref("flights").on("value", snap => {
     const sched = new Date(f.schedDep).getTime();
     const eta = new Date(f.eta).getTime();
     const start = f.timestamp || sched;
-    const endTime = f.endTime || null;
-
     const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
 
+    // Status logic
     let status;
     if (start > sched) {
       status = "🔴 Delayed Departure";
@@ -63,31 +72,32 @@ db.ref("flights").on("value", snap => {
       Status: ${status}
     `;
 
-    const endBtn = document.createElement("button");
-    endBtn.textContent = "✅ End Flight";
-    endBtn.style.marginTop = "10px";
-    endBtn.onclick = () => {
-      const now = Date.now();
-      const delay = start > sched ? start - sched : 0;
-      const duration = now - start;
+    // Only show "End Flight" to creator
+    if (user && user.uid === f.uid) {
+      const endBtn = document.createElement("button");
+      endBtn.textContent = "✅ End Flight";
+      endBtn.style.marginTop = "10px";
+      endBtn.onclick = () => {
+        const endTime = Date.now();
+        const delay = start > sched ? start - sched : 0;
+        const duration = endTime - start;
 
-      const summary = `🧾 Flight Summary:
+        alert(`🧾 Flight Summary:
 Callsign: ${f.callsign}
 Aircraft: ${f.aircraft}
 Route: ${f.dep} → ${f.arr}
 Status: ${status}
 Flight Duration: ${(duration / 60000).toFixed(0)} min
-Delay: ${delay > 0 ? "+" + (delay / 60000).toFixed(0) + " min" : "None"}
-      `;
+Delay: ${delay > 0 ? "+" + (delay / 60000).toFixed(0) + " min" : "None"}`);
 
-      alert(summary);
-      db.ref("flights/" + id).update({
-        completed: true,
-        endTime: now
-      });
-    };
+        db.ref("flights/" + id).update({
+          completed: true,
+          endTime
+        });
+      };
+      div.appendChild(endBtn);
+    }
 
-    div.appendChild(endBtn);
     flightList.appendChild(div);
   });
 });
