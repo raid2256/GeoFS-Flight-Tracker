@@ -29,26 +29,38 @@ document.getElementById("flightForm").addEventListener("submit", e => {
   flightForm.reset();
 });
 
-// Display Active Flights Only
+// Display Active Flights
 db.ref("flights").on("value", snap => {
   flightList.innerHTML = "";
   const now = Date.now();
   const flights = snap.val() || {};
 
   Object.entries(flights).forEach(([id, f]) => {
-    const isComplete = !!f.completed;
-    if (isComplete) return; // 🔒 Skip completed flights
+    if (f.completed) return; // Hide completed flights
 
     const sched = new Date(f.schedDep).getTime();
     const eta = new Date(f.eta).getTime();
+    const startTime = f.timestamp || sched;
+
     const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
+
+    // Flight Status Logic
+    let status;
+    if (startTime > sched) {
+      status = "🔴 Delayed Departure";
+    } else if (now > eta) {
+      status = "🟡 Arriving Late";
+    } else {
+      status = "🟢 On Time";
+    }
 
     const div = document.createElement("div");
     div.className = "flightCard";
     div.innerHTML = `
       <strong>${f.callsign}</strong> | ${f.aircraft}<br>
       🛫 ${f.dep} → 🛬 ${f.arr}<br>
-      Progress: ${progress.toFixed(0)}%
+      Progress: ${progress.toFixed(0)}%<br>
+      Status: ${status}
     `;
 
     const endBtn = document.createElement("button");
