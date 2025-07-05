@@ -3,25 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Radar Home</title>
-
-  <!-- ✅ This is the working CSS link -->
+  <title>Flight Dashboard</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <h1>GEFS Radar Display</h1>
-  <p>View live flights or sign in to manage your own:</p>
+  <h1>🛫 Radar Dashboard</h1>
+  <div id="userInfo">👤 Checking login status...</div>
 
-  <!-- Example public flight list output -->
-  <div id="flightList">
-    <!-- Flight cards injected here -->
+  <!-- Auth Controls -->
+  <div id="authContainer">
+    <h2>Login / Sign Up</h2>
+    <input type="text" id="username" placeholder="Username (for signup)" />
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button id="loginBtn">🔐 Login</button>
+    <button id="signupBtn">🆕 Sign Up</button>
   </div>
 
-  <a href="dashboard.html">
-    <button>🚪 Sign In</button>
-  </a>
+  <!-- Flight Form (appears after login) -->
+  <form id="flightForm" style="display: none;">
+    <h2>✈️ Submit Flight</h2>
+    <input type="text" id="callsign" placeholder="Callsign" required />
+    <input type="text" id="aircraft" placeholder="Aircraft" required />
+    <input type="text" id="dep" placeholder="Departure ICAO (e.g. YSSY)" required />
+    <input type="text" id="arr" placeholder="Arrival ICAO (e.g. YMML)" required />
+    <label>Scheduled Departure</label>
+    <input type="datetime-local" id="schedDep" required />
+    <label>ETA</label>
+    <input type="datetime-local" id="eta" required />
+    <button type="submit">📤 Submit Flight</button>
+  </form>
 
-  <script src="public.js"></script>
+  <!-- Flight List -->
+  <div id="flightList"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="app.js"></script>
+
 </body>
 </html>
