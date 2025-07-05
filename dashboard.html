@@ -1,35 +1,27 @@
-body {
-  font-family: 'Segoe UI', Roboto, sans-serif;
-  background-color: #f7f9fc;
-  margin: 0;
-  padding: 30px 15px;
-  color: #1c1e21;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radar Home</title>
 
-h1 {
-  text-align: center;
-  font-size: 2em;
-  margin-bottom: 10px;
-  color: #0a84ff;
-}
+  <!-- ✅ This is the working CSS link -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
-#userInfo {
-  text-align: center;
-  font-size: 1.1em;
-  margin-bottom: 30px;
-  color: #444;
-}
+  <h1>GEFS Radar Display</h1>
+  <p>View live flights or sign in to manage your own:</p>
 
-#flightForm {
-  background: #ffffff;
-  padding: 25px;
-  max-width: 600px;
-  margin: 0 auto 30px;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-  border-left: 6px solid #0a84ff;
-}
+  <!-- Example public flight list output -->
+  <div id="flightList">
+    <!-- Flight cards injected here -->
+  </div>
 
-input, select {
-  display: block;
-  width
+  <a href="dashboard.html">
+    <button>🚪 Sign In</button>
+  </a>
+
+  <script src="public.js"></script>
+</body>
+</html>
