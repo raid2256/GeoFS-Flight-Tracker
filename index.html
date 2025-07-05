@@ -3,25 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Radar Home</title>
+  <title>GeoFS Radar</title>
 
-  <!-- ✅ This is the working CSS link -->
+  <!-- ✅ Link to your external CSS -->
   <link rel="stylesheet" href="style.css" />
+
+  <!-- ✅ Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <!-- ✅ Initialize Firebase -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyATDhuV86g9Pa0r6remuusjO1-QLHWhEEI",
+      authDomain: "geofs-radar-f163b.firebaseapp.com",
+      databaseURL: "https://geofs-radar-f163b-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "geofs-radar-f163b",
+      storageBucket: "geofs-radar-f163b.appspot.com",
+      messagingSenderId: "218546405445",
+      appId: "1:218546405445:web:9e1c4854f9bbb55764e32c"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+  </script>
 </head>
+
 <body>
+  <h1>📡 GeoFS Radar</h1>
+  <p style="text-align:center;">Live public flights submitted by signed-in pilots:</p>
 
-  <h1>GEFS Radar Display</h1>
-  <p>View live flights or sign in to manage your own:</p>
-
-  <!-- Example public flight list output -->
   <div id="flightList">
-    <!-- Flight cards injected here -->
+    <!-- public.js will populate this -->
   </div>
 
-  <a href="dashboard.html">
-    <button>🚪 Sign In</button>
-  </a>
+  <div style="text-align: center; margin-top: 30px;">
+    <a href="dashboard.html">
+      <button>🔐 Sign In</button>
+    </a>
+  </div>
 
+  <!-- ✅ Public-side flight feed logic -->
   <script src="public.js"></script>
 </body>
 </html>
