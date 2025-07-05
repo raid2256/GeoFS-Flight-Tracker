@@ -1,46 +1,35 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>GeoFS Radar</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-</head>
-<body>
-  <h1>✈️ GeoFS Radar Dashboard</h1>
+body {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background-color: #f7f9fc;
+  margin: 0;
+  padding: 30px 15px;
+  color: #1c1e21;
+}
 
-  <!-- 🔐 Login / Signup UI -->
-  <div id="authContainer">
-    <h2>Login</h2>
-    <input type="email" id="email" placeholder="Email" required />
-    <input type="password" id="password" placeholder="Password" required />
-    <input type="text" id="username" placeholder="Username" required />
-    <div>
-      <button id="loginBtn">🔑 Sign In</button>
-      <button id="signupBtn">🆕 Create Account</button>
-    </div>
-    <p id="userInfo" style="margin-top:10px;"></p>
-    <hr>
-  </div>
+h1 {
+  text-align: center;
+  font-size: 2em;
+  margin-bottom: 10px;
+  color: #0a84ff;
+}
 
-  <!-- 🛫 Flight Form -->
-  <form id="flightForm" style="display: none;">
-    <h2>📤 Submit Flight</h2>
-    <input type="text" id="callsign" placeholder="Callsign" required />
-    <input type="text" id="aircraft" placeholder="Aircraft" required />
-    <input type="text" id="dep" placeholder="Departure" required />
-    <input type="text" id="arr" placeholder="Arrival" required />
-    <input type="datetime-local" id="schedDep" required />
-    <input type="datetime-local" id="eta" required />
-    <button type="submit">Submit Flight</button>
-  </form>
+#userInfo {
+  text-align: center;
+  font-size: 1.1em;
+  margin-bottom: 30px;
+  color: #444;
+}
 
-  <!-- 🛬 Live Flights -->
-  <h2>🛫 Active Flights</h2>
-  <div id="flightList"></div>
+#flightForm {
+  background: #ffffff;
+  padding: 25px;
+  max-width: 600px;
+  margin: 0 auto 30px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  border-left: 6px solid #0a84ff;
+}
 
-  <script src="app.js"></script>
-</body>
-</html>
+input, select {
+  display: block;
+  width
