@@ -31,28 +31,21 @@ document.getElementById("flightForm").addEventListener("submit", e => {
   flightForm.reset();
 });
 
-// Display Flights
+// Display Active Flights
 db.ref("flights").on("value", snap => {
   flightList.innerHTML = "";
-  pastFlightList.innerHTML = "";
-
   const now = Date.now();
   const flights = snap.val() || {};
 
   Object.entries(flights).forEach(([id, f]) => {
+    if (f.completed) return;
+
     const sched = new Date(f.schedDep).getTime();
     const eta = new Date(f.eta).getTime();
     const start = f.timestamp || sched;
-    const end = f.endTime || null;
     const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
 
-    // ⏱ Auto-expiry logic
-    const ageSinceStart = now - start;
-    const ageSinceEnd = end ? now - end : 0;
-    const expired = (end && ageSinceEnd > 12 * 60 * 60 * 1000) || (!end && ageSinceStart > 28 * 60 * 60 * 1000);
-    if (expired) return;
-
-    // ✈ Status logic
+    // Status logic
     let status;
     if (start > sched) {
       status = "🔴 Delayed Departure";
@@ -62,7 +55,7 @@ db.ref("flights").on("value", snap => {
       status = "🟢 On Time";
     }
 
-    // 📦 Create card
+    // Create flight card
     const div = document.createElement("div");
     div.className = "flightCard";
     div.innerHTML = `
@@ -72,19 +65,16 @@ db.ref("flights").on("value", snap => {
       Status: ${status}
     `;
 
-    if (f.completed) {
-      pastFlightList.appendChild(div);
-    } else {
-      // Add End Flight button
-      const endBtn = document.createElement("button");
-      endBtn.textContent = "✅ End Flight";
-      endBtn.style.marginTop = "10px";
-      endBtn.onclick = () => {
-        const endTime = Date.now();
-        const delay = start > sched ? start - sched : 0;
-        const duration = endTime - start;
+    // End Flight button
+    const endBtn = document.createElement("button");
+    endBtn.textContent = "✅ End Flight";
+    endBtn.style.marginTop = "10px";
+    endBtn.onclick = () => {
+      const endTime = Date.now();
+      const delay = start > sched ? start - sched : 0;
+      const duration = endTime - start;
 
-        alert(`🧾 Flight Summary:
+      alert(`🧾 Flight Summary:
 Callsign: ${f.callsign}
 Aircraft: ${f.aircraft}
 Route: ${f.dep} → ${f.arr}
@@ -92,14 +82,13 @@ Status: ${status}
 Flight Duration: ${(duration / 60000).toFixed(0)} min
 Delay: ${delay > 0 ? "+" + (delay / 60000).toFixed(0) + " min" : "None"}`);
 
-        db.ref("flights/" + id).update({
-          completed: true,
-          endTime
-        });
-      };
+      db.ref("flights/" + id).update({
+        completed: true,
+        endTime
+      });
+    };
 
-      div.appendChild(endBtn);
-      flightList.appendChild(div);
-    }
+    div.appendChild(endBtn);
+    flightList.appendChild(div);
   });
 });
