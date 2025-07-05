@@ -15,10 +15,9 @@ const db = firebase.database();
 // Auth UI
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
-const usernameInput = document.getElementById("username"); // NEW username input
+const usernameInput = document.getElementById("username"); // Username field
 const userInfo = document.getElementById("userInfo");
 
-// Login
 document.getElementById("loginBtn").onclick = () => {
   firebase.auth().signInWithEmailAndPassword(
     emailInput.value.trim(),
@@ -26,7 +25,6 @@ document.getElementById("loginBtn").onclick = () => {
   ).catch(err => alert("Login Error: " + err.message));
 };
 
-// Signup with username
 document.getElementById("signupBtn").onclick = () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
@@ -40,26 +38,25 @@ document.getElementById("signupBtn").onclick = () => {
   firebase.auth().createUserWithEmailAndPassword(email, password)
     .then(cred => {
       const uid = cred.user.uid;
-      db.ref("users/" + uid).set({ username });
-      alert("Account created! You're now signed in.");
+      return db.ref("users/" + uid).set({ username });
     })
+    .then(() => alert("Account created! You're now signed in."))
     .catch(err => alert("Signup Error: " + err.message));
 };
 
-// Auth State Listener
 firebase.auth().onAuthStateChanged(user => {
   const flightForm = document.getElementById("flightForm");
   const flightList = document.getElementById("flightList");
 
   if (!user) {
     flightForm.style.display = "none";
-    flightList.innerHTML = "<p>🔒 Please sign in to view and manage your flights.</p>";
+    flightList.innerHTML = "<p>🔒 Please sign in to view and manage flights.</p>";
     userInfo.textContent = "";
     return;
   }
 
-  // Show signed-in user + username
   flightForm.style.display = "block";
+
   db.ref("users/" + user.uid + "/username").once("value").then(snap => {
     const uname = snap.val() || "Unknown Pilot";
     userInfo.innerHTML = `👤 Welcome, <strong>${uname}</strong><br>${user.email}`;
@@ -83,63 +80,73 @@ firebase.auth().onAuthStateChanged(user => {
     flightForm.reset();
   });
 
-  // Display user's active flights
+  // Display ALL active flights with usernames
   db.ref("flights").on("value", snap => {
     flightList.innerHTML = "";
     const now = Date.now();
     const flights = snap.val() || {};
 
     Object.entries(flights).forEach(([id, f]) => {
-      if (f.completed || f.uid !== user.uid) return;
+      if (f.completed) return;
 
-      const sched = new Date(f.schedDep).getTime();
-      const eta = new Date(f.eta).getTime();
-      const start = f.timestamp || sched;
-      const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
-      const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
+      db.ref("users/" + f.uid + "/username").once("value").then(userSnap => {
+        const pilotName = userSnap.val() || "Unknown Pilot";
 
-      let status;
-      if (start > sched) status = "🔴 Delayed Departure";
-      else if (now > eta) status = "🟡 Arriving Late";
-      else status = "🟢 On Time";
+        const sched = new Date(f.schedDep).getTime();
+        const eta = new Date(f.eta).getTime();
+        const start = f.timestamp || sched;
+        const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
+        const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
 
-      const div = document.createElement("div");
-      div.className = "flightCard";
-      div.innerHTML = `
-        <strong>${f.callsign}</strong> | ${f.aircraft}<br>
-        🛫 ${f.dep} → 🛬 ${f.arr}
-        <div class="progressContainer">
-          <div class="progressLabel">🕓 ${elapsed} min in flight</div>
-          <div class="progressBar">
-            <div class="progressFill" style="width: ${progress.toFixed(0)}%;"></div>
+        let status;
+        if (start > sched) status = "🔴 Delayed Departure";
+        else if (now > eta) status = "🟡 Arriving Late";
+        else status = "🟢 On Time";
+
+        const div = document.createElement("div");
+        div.className = "flightCard";
+        div.innerHTML = `
+          👤 Pilot: <strong>${pilotName}</strong><br>
+          <strong>${f.callsign}</strong> | ${f.aircraft}<br>
+          🛫 ${f.dep} → 🛬 ${f.arr}
+          <div class="progressContainer">
+            <div class="progressLabel">🕓 ${elapsed} min in flight</div>
+            <div class="progressBar">
+              <div class="progressFill" style="width: ${progress.toFixed(0)}%;"></div>
+            </div>
           </div>
-        </div>
-        Status: ${status}
-      `;
+          Status: ${status}
+        `;
 
-      const endBtn = document.createElement("button");
-      endBtn.textContent = "✅ End Flight";
-      endBtn.onclick = () => {
-        const endTime = Date.now();
-        const delay = start > sched ? start - sched : 0;
-        const duration = endTime - start;
+        // Only show "End Flight" if it's your flight
+        if (f.uid === user.uid) {
+          const endBtn = document.createElement("button");
+          endBtn.textContent = "✅ End Flight";
+          endBtn.onclick = () => {
+            const endTime = Date.now();
+            const delay = start > sched ? start - sched : 0;
+            const duration = endTime - start;
 
-        alert(`🧾 Flight Summary:
+            alert(`🧾 Flight Summary:
 Callsign: ${f.callsign}
 Aircraft: ${f.aircraft}
+Pilot: ${pilotName}
 Route: ${f.dep} → ${f.arr}
 Status: ${status}
 Flight Duration: ${(duration / 60000).toFixed(0)} min
 Delay: ${delay > 0 ? "+" + (delay / 60000).toFixed(0) + " min" : "None"}`);
 
-        db.ref("flights/" + id).update({
-          completed: true,
-          endTime
-        });
-      };
+            db.ref("flights/" + id).update({
+              completed: true,
+              endTime
+            });
+          };
 
-      div.appendChild(endBtn);
-      flightList.appendChild(div);
+          div.appendChild(endBtn);
+        }
+
+        flightList.appendChild(div);
+      });
     });
   });
 });
