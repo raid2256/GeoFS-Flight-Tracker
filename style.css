@@ -84,3 +84,31 @@ h1, h2 {
   display: flex;
   flex-direction: column;
 }
+.progressContainer {
+  margin: 10px 0;
+  position: relative;
+  width: 100%;
+}
+
+.progressLabel {
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: #555;
+}
+
+.progressBar {
+  background: #e1e5ea;
+  border-radius: 20px;
+  height: 14px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.progressFill {
+  background: linear-gradient(90deg, #1fa2ff, #12d8fa, #a6ffcb);
+  height: 100%;
+  width: 0%;
+  border-radius: 20px;
+  transition: width 0.4s ease;
+}
