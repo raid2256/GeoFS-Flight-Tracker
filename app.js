@@ -12,7 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Flight Submission
+// Handle Flight Submission
 document.getElementById("flightForm").addEventListener("submit", e => {
   e.preventDefault();
 
@@ -43,9 +43,11 @@ db.ref("flights").on("value", snap => {
     const sched = new Date(f.schedDep).getTime();
     const eta = new Date(f.eta).getTime();
     const start = f.timestamp || sched;
-    const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
 
-    // Status logic
+    const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
+    const totalFlightTime = eta - sched;
+    const elapsedMinutes = Math.round((progress / 100) * totalFlightTime / 60000);
+
     let status;
     if (start > sched) {
       status = "🔴 Delayed Departure";
@@ -55,17 +57,20 @@ db.ref("flights").on("value", snap => {
       status = "🟢 On Time";
     }
 
-    // Create flight card
     const div = document.createElement("div");
     div.className = "flightCard";
     div.innerHTML = `
       <strong>${f.callsign}</strong> | ${f.aircraft}<br>
-      🛫 ${f.dep} → 🛬 ${f.arr}<br>
-      Progress: ${progress.toFixed(0)}%<br>
+      🛫 ${f.dep} → 🛬 ${f.arr}
+      <div class="progressContainer">
+        <div class="progressLabel">🕓 ${elapsedMinutes} min in flight</div>
+        <div class="progressBar">
+          <div class="progressFill" style="width: ${progress.toFixed(0)}%;"></div>
+        </div>
+      </div>
       Status: ${status}
     `;
 
-    // End Flight button
     const endBtn = document.createElement("button");
     endBtn.textContent = "✅ End Flight";
     endBtn.style.marginTop = "10px";
