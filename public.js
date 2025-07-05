@@ -1,48 +1,46 @@
-// Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyATDhuV86g9Pa0r6remuusjO1-QLHWhEEI",
-  authDomain: "geofs-radar-f163b.firebaseapp.com",
-  databaseURL: "https://geofs-radar-f163b-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "geofs-radar-f163b",
-  storageBucket: "geofs-radar-f163b.appspot.com",
-  messagingSenderId: "218546405445",
-  appId: "1:218546405445:web:9e1c4854f9bbb55764e32c"
-};
+// Reference to Firebase DB (assumes firebase.initializeApp has been called)
+const flightList = document.getElementById("flightList");
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+firebase.database().ref("flights").on("value", snapshot => {
+  const data = snapshot.val() || {};
+  flightList.innerHTML = "";
 
-// Load Active Flights (Public)
-db.ref("flights").on("value", snap => {
-  const list = document.getElementById("publicFlightList");
-  list.innerHTML = "";
   const now = Date.now();
-  const flights = snap.val() || {};
 
-  Object.entries(flights).forEach(([id, f]) => {
-    if (f.completed) return;
+  Object.entries(data).forEach(([id, flight]) => {
+    if (flight.completed) return; // Show only active flights
 
-    const sched = new Date(f.schedDep).getTime();
-    const eta = new Date(f.eta).getTime();
-    const start = f.timestamp || sched;
-    const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
-    const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
+    // Lookup pilot username
+    firebase.database().ref("users/" + flight.uid + "/username").once("value").then(userSnap => {
+      const username = userSnap.val() || "Unknown Pilot";
 
-    let status;
-    if (start > sched) status = "🔴 Delayed Departure";
-    else if (now > eta) status = "🟡 Arriving Late";
-    else status = "🟢 On Time";
+      const sched = new Date(flight.schedDep).getTime();
+      const eta = new Date(flight.eta).getTime();
+      const start = flight.timestamp || sched;
+      const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
+      const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
 
-    const div = document.createElement("div");
-    div.className = "flightCard";
-    div.innerHTML = `
-      <strong>${f.callsign}</strong> | ${f.aircraft}<br>
-      🛫 ${f.dep} → 🛬 ${f.arr}<br>
-      🕓 ${elapsed} min in flight<br>
-      Progress: ${progress.toFixed(0)}%<br>
-      Status: ${status}
-    `;
+      let status;
+      if (start > sched) status = "🔴 Delayed Departure";
+      else if (now > eta) status = "🟡 Arriving Late";
+      else status = "🟢 On Time";
 
-    list.appendChild(div);
+      const div = document.createElement("div");
+      div.className = "flightCard";
+      div.innerHTML = `
+        👤 Pilot: <strong>${username}</strong><br>
+        <strong>${flight.callsign}</strong> | ${flight.aircraft}<br>
+        🛫 ${flight.dep} → 🛬 ${flight.arr}
+        <div class="progressContainer">
+          <div class="progressLabel">🕓 ${elapsed} min in flight</div>
+          <div class="progressBar">
+            <div class="progressFill" style="width: ${progress.toFixed(0)}%;"></div>
+          </div>
+        </div>
+        Status: ${status}
+      `;
+
+      flightList.appendChild(div);
+    });
   });
 });
