@@ -36,17 +36,17 @@ db.ref("flights").on("value", snap => {
   const flights = snap.val() || {};
 
   Object.entries(flights).forEach(([id, f]) => {
-    if (f.completed) return; // Hide completed flights
+    if (f.completed) return;
 
     const sched = new Date(f.schedDep).getTime();
     const eta = new Date(f.eta).getTime();
-    const startTime = f.timestamp || sched;
+    const start = f.timestamp || sched;
+    const endTime = f.endTime || null;
 
     const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
 
-    // Flight Status Logic
     let status;
-    if (startTime > sched) {
+    if (start > sched) {
       status = "🔴 Delayed Departure";
     } else if (now > eta) {
       status = "🟡 Arriving Late";
@@ -67,13 +67,27 @@ db.ref("flights").on("value", snap => {
     endBtn.textContent = "✅ End Flight";
     endBtn.style.marginTop = "10px";
     endBtn.onclick = () => {
+      const now = Date.now();
+      const delay = start > sched ? start - sched : 0;
+      const duration = now - start;
+
+      const summary = `🧾 Flight Summary:
+Callsign: ${f.callsign}
+Aircraft: ${f.aircraft}
+Route: ${f.dep} → ${f.arr}
+Status: ${status}
+Flight Duration: ${(duration / 60000).toFixed(0)} min
+Delay: ${delay > 0 ? "+" + (delay / 60000).toFixed(0) + " min" : "None"}
+      `;
+
+      alert(summary);
       db.ref("flights/" + id).update({
         completed: true,
-        endTime: Date.now()
+        endTime: now
       });
     };
-    div.appendChild(endBtn);
 
+    div.appendChild(endBtn);
     flightList.appendChild(div);
   });
 });
