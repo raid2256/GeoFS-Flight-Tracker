@@ -12,74 +12,105 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Handle Flight Submission
-document.getElementById("flightForm").addEventListener("submit", e => {
-  e.preventDefault();
+// Auth UI
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const userInfo = document.getElementById("userInfo");
 
-  const data = {
-    callsign: callsign.value,
-    aircraft: aircraft.value,
-    dep: dep.value.toUpperCase(),
-    arr: arr.value.toUpperCase(),
-    schedDep: new Date(schedDep.value).toISOString(),
-    eta: new Date(eta.value).toISOString(),
-    timestamp: Date.now()
-  };
+document.getElementById("loginBtn").onclick = () => {
+  firebase.auth().signInWithEmailAndPassword(
+    emailInput.value.trim(),
+    passwordInput.value.trim()
+  ).catch(err => alert("Login Error: " + err.message));
+};
 
-  const id = "FLT_" + Date.now();
-  db.ref("flights/" + id).set(data);
-  flightForm.reset();
-});
+document.getElementById("signupBtn").onclick = () => {
+  firebase.auth().createUserWithEmailAndPassword(
+    emailInput.value.trim(),
+    passwordInput.value.trim()
+  ).then(() => alert("Account created! You're now signed in."))
+  .catch(err => alert("Signup Error: " + err.message));
+};
 
-// Display Active Flights
-db.ref("flights").on("value", snap => {
-  flightList.innerHTML = "";
-  const now = Date.now();
-  const flights = snap.val() || {};
+// Auth State Listener
+firebase.auth().onAuthStateChanged(user => {
+  const flightForm = document.getElementById("flightForm");
+  const flightList = document.getElementById("flightList");
 
-  Object.entries(flights).forEach(([id, f]) => {
-    if (f.completed) return;
+  if (!user) {
+    flightForm.style.display = "none";
+    flightList.innerHTML = "<p>🔒 Please sign in to view and manage your flights.</p>";
+    userInfo.textContent = "";
+    return;
+  }
 
-    const sched = new Date(f.schedDep).getTime();
-    const eta = new Date(f.eta).getTime();
-    const start = f.timestamp || sched;
+  flightForm.style.display = "block";
+  userInfo.textContent = `👤 Signed in as ${user.email}`;
 
-    const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
-    const totalFlightTime = eta - sched;
-    const elapsedMinutes = Math.round((progress / 100) * totalFlightTime / 60000);
+  // Submit New Flight
+  document.getElementById("flightForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const data = {
+      callsign: callsign.value,
+      aircraft: aircraft.value,
+      dep: dep.value.toUpperCase(),
+      arr: arr.value.toUpperCase(),
+      schedDep: new Date(schedDep.value).toISOString(),
+      eta: new Date(eta.value).toISOString(),
+      timestamp: Date.now(),
+      uid: user.uid
+    };
+    const id = "FLT_" + Date.now();
+    db.ref("flights/" + id).set(data);
+    flightForm.reset();
+  });
 
-    let status;
-    if (start > sched) {
-      status = "🔴 Delayed Departure";
-    } else if (now > eta) {
-      status = "🟡 Arriving Late";
-    } else {
-      status = "🟢 On Time";
-    }
+  // Display Flights (User-only)
+  db.ref("flights").on("value", snap => {
+    flightList.innerHTML = "";
+    const now = Date.now();
+    const flights = snap.val() || {};
 
-    const div = document.createElement("div");
-    div.className = "flightCard";
-    div.innerHTML = `
-      <strong>${f.callsign}</strong> | ${f.aircraft}<br>
-      🛫 ${f.dep} → 🛬 ${f.arr}
-      <div class="progressContainer">
-        <div class="progressLabel">🕓 ${elapsedMinutes} min in flight</div>
-        <div class="progressBar">
-          <div class="progressFill" style="width: ${progress.toFixed(0)}%;"></div>
+    Object.entries(flights).forEach(([id, f]) => {
+      if (f.completed || f.uid !== user.uid) return;
+
+      const sched = new Date(f.schedDep).getTime();
+      const eta = new Date(f.eta).getTime();
+      const start = f.timestamp || sched;
+      const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
+      const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
+
+      let status;
+      if (start > sched) {
+        status = "🔴 Delayed Departure";
+      } else if (now > eta) {
+        status = "🟡 Arriving Late";
+      } else {
+        status = "🟢 On Time";
+      }
+
+      const div = document.createElement("div");
+      div.className = "flightCard";
+      div.innerHTML = `
+        <strong>${f.callsign}</strong> | ${f.aircraft}<br>
+        🛫 ${f.dep} → 🛬 ${f.arr}
+        <div class="progressContainer">
+          <div class="progressLabel">🕓 ${elapsed} min in flight</div>
+          <div class="progressBar">
+            <div class="progressFill" style="width: ${progress.toFixed(0)}%;"></div>
+          </div>
         </div>
-      </div>
-      Status: ${status}
-    `;
+        Status: ${status}
+      `;
 
-    const endBtn = document.createElement("button");
-    endBtn.textContent = "✅ End Flight";
-    endBtn.style.marginTop = "10px";
-    endBtn.onclick = () => {
-      const endTime = Date.now();
-      const delay = start > sched ? start - sched : 0;
-      const duration = endTime - start;
+      const endBtn = document.createElement("button");
+      endBtn.textContent = "✅ End Flight";
+      endBtn.onclick = () => {
+        const endTime = Date.now();
+        const delay = start > sched ? start - sched : 0;
+        const duration = endTime - start;
 
-      alert(`🧾 Flight Summary:
+        alert(`🧾 Flight Summary:
 Callsign: ${f.callsign}
 Aircraft: ${f.aircraft}
 Route: ${f.dep} → ${f.arr}
@@ -87,13 +118,14 @@ Status: ${status}
 Flight Duration: ${(duration / 60000).toFixed(0)} min
 Delay: ${delay > 0 ? "+" + (delay / 60000).toFixed(0) + " min" : "None"}`);
 
-      db.ref("flights/" + id).update({
-        completed: true,
-        endTime
-      });
-    };
+        db.ref("flights/" + id).update({
+          completed: true,
+          endTime
+        });
+      };
 
-    div.appendChild(endBtn);
-    flightList.appendChild(div);
+      div.appendChild(endBtn);
+      flightList.appendChild(div);
+    });
   });
 });
