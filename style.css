@@ -1,13 +1,11 @@
-/* 🌐 Base layout */
 body {
   font-family: 'Segoe UI', Roboto, sans-serif;
-  background-color: #f5f8fa;
+  background-color: #f7f9fc;
   margin: 0;
-  padding: 30px 20px;
+  padding: 30px 15px;
   color: #1c1e21;
 }
 
-/* 📌 Header & info */
 h1 {
   text-align: center;
   font-size: 2em;
@@ -19,17 +17,16 @@ h1 {
   text-align: center;
   font-size: 1.1em;
   margin-bottom: 30px;
-  color: #555;
+  color: #444;
 }
 
-/* 📝 Form styling */
 #flightForm {
   background: #ffffff;
   padding: 25px;
   max-width: 600px;
   margin: 0 auto 30px;
   border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
   border-left: 6px solid #0a84ff;
 }
 
@@ -41,12 +38,6 @@ input, select {
   font-size: 1em;
   border: 1px solid #ccc;
   border-radius: 6px;
-  transition: border-color 0.3s ease;
-}
-
-input:focus, select:focus {
-  border-color: #0a84ff;
-  outline: none;
 }
 
 button {
@@ -57,14 +48,12 @@ button {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 
 button:hover {
   background-color: #006edc;
 }
 
-/* ✈️ Flight card display */
 .flightCard {
   background: #fff;
   border-left: 6px solid #4caf50;
@@ -73,14 +62,8 @@ button:hover {
   max-width: 600px;
   border-radius: 10px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-  transition: transform 0.2s ease;
 }
 
-.flightCard:hover {
-  transform: scale(1.015);
-}
-
-/* 📈 Progress bar */
 .progressContainer {
   margin-top: 12px;
 }
@@ -103,4 +86,12 @@ button:hover {
   background-color: #4caf50;
   width: 0%;
   transition: width 0.6s ease-in-out;
+}
+
+#map {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
