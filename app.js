@@ -64,7 +64,7 @@ firebase.auth().onAuthStateChanged(user => {
   };
 
   db.ref("flights").on("value", snap => {
-    list.innerHTML = "";
+    list.innerHTML = "<h2 style='text-align:center;'>🛬 Active Flights</h2>";
     const now = Date.now();
     const flights = snap.val() || {};
 
