@@ -1,22 +1,32 @@
-// Reference to Firebase DB (assumes firebase.initializeApp has been called)
 const flightList = document.getElementById("flightList");
 
-firebase.database().ref("flights").on("value", snapshot => {
-  const data = snapshot.val() || {};
-  flightList.innerHTML = "";
+// Time formatter for readable output
+function formatTime(date) {
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
+// Load all active (not completed) flights
+firebase.database().ref("flights").on("value", snapshot => {
+  const flights = snapshot.val() || {};
+  flightList.innerHTML = "";
   const now = Date.now();
 
-  Object.entries(data).forEach(([id, flight]) => {
-    if (flight.completed) return; // Show only active flights
+  Object.entries(flights).forEach(([id, f]) => {
+    if (f.completed) return;
 
-    // Lookup pilot username
-    firebase.database().ref("users/" + flight.uid + "/username").once("value").then(userSnap => {
+    firebase.database().ref("users/" + f.uid + "/username").once("value").then(userSnap => {
       const username = userSnap.val() || "Unknown Pilot";
 
-      const sched = new Date(flight.schedDep).getTime();
-      const eta = new Date(flight.eta).getTime();
-      const start = flight.timestamp || sched;
+      const sched = new Date(f.schedDep).getTime();
+      const eta = new Date(f.eta).getTime();
+      const start = f.timestamp || sched;
+      const end = f.endTime || null;
+
+      const schedStart = formatTime(new Date(f.schedDep));
+      const schedEnd = formatTime(new Date(f.eta));
+      const actualStart = formatTime(new Date(start));
+      const actualEnd = end ? formatTime(new Date(end)) : null;
+
       const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
       const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
 
@@ -29,8 +39,10 @@ firebase.database().ref("flights").on("value", snapshot => {
       div.className = "flightCard";
       div.innerHTML = `
         👤 Pilot: <strong>${username}</strong><br>
-        <strong>${flight.callsign}</strong> | ${flight.aircraft}<br>
-        🛫 ${flight.dep} → 🛬 ${flight.arr}
+        <strong>${f.callsign}</strong> | ${f.aircraft}<br>
+        🛫 ${f.dep} → 🛬 ${f.arr}<br>
+        Scheduled: <s>${schedStart} → ${schedEnd}</s><br>
+        Actual: ${actualStart}${actualEnd ? " → " + actualEnd : ""}
         <div class="progressContainer">
           <div class="progressLabel">🕓 ${elapsed} min in flight</div>
           <div class="progressBar">
