@@ -4,44 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flight Dashboard</title>
+
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
   <h1>🛫 Radar Dashboard</h1>
-  <div id="userInfo">👤 Checking login status...</div>
+  <div id="userInfo"></div>
 
-  <!-- Auth Controls -->
-  <div id="authContainer">
-    <h2>Login / Sign Up</h2>
-    <input type="text" id="username" placeholder="Username (for signup)" />
-    <input type="email" id="email" placeholder="Email" required />
-    <input type="password" id="password" placeholder="Password" required />
-    <button id="loginBtn">🔐 Login</button>
-    <button id="signupBtn">🆕 Sign Up</button>
-  </div>
+  <!-- 🔍 MAP DISPLAY -->
+  <div id="map" style="height: 400px; margin-bottom: 30px;"></div>
 
-  <!-- Flight Form (appears after login) -->
   <form id="flightForm" style="display: none;">
-    <h2>✈️ Submit Flight</h2>
-    <input type="text" id="callsign" placeholder="Callsign" required />
-    <input type="text" id="aircraft" placeholder="Aircraft" required />
-    <input type="text" id="dep" placeholder="Departure ICAO (e.g. YSSY)" required />
-    <input type="text" id="arr" placeholder="Arrival ICAO (e.g. YMML)" required />
-    <label>Scheduled Departure</label>
-    <input type="datetime-local" id="schedDep" required />
-    <label>ETA</label>
-    <input type="datetime-local" id="eta" required />
-    <button type="submit">📤 Submit Flight</button>
+    <!-- Your input fields (callsign, aircraft, ICAO codes, etc.) -->
   </form>
 
-  <!-- Flight List -->
   <div id="flightList"></div>
 
+  <!-- Firebase & App Logic -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="airports.js"></script>
   <script src="app.js"></script>
+  <script src="map.js"></script>
 
 </body>
 </html>
