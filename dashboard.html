@@ -3,46 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GeoFS Radar Dashboard</title>
-
-  <!-- Style & Leaflet -->
+  <title>Flight Dashboard</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
 
-  <h1>🛫 GeoFS Radar Dashboard</h1>
-  <div id="userInfo"></div>
+  <h1>🛫 Radar Dashboard</h1>
+  <div id="userInfo">👤 Checking login status...</div>
 
-  <!-- Map -->
-  <div id="map" style="height: 400px; margin-bottom: 30px;"></div>
+  <!-- Auth Controls -->
+  <div id="authContainer">
+    <h2>Login / Sign Up</h2>
+    <input type="text" id="username" placeholder="Username (for signup)" />
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button id="loginBtn">🔐 Login</button>
+    <button id="signupBtn">🆕 Sign Up</button>
+  </div>
 
   <!-- Flight Form -->
-  <form id="flightForm" style="display:none;">
-    <h2>Submit Flight</h2>
+  <form id="flightForm" style="display: none;">
+    <h2>✈️ Submit Flight</h2>
     <input type="text" id="callsign" placeholder="Callsign" required />
     <input type="text" id="aircraft" placeholder="Aircraft" required />
-    <input type="text" id="dep" placeholder="Departure ICAO" required />
-    <input type="text" id="arr" placeholder="Arrival ICAO" required />
-    <label>Scheduled Departure:</label>
+    <input type="text" id="dep" placeholder="Departure ICAO (e.g. YSSY)" required />
+    <input type="text" id="arr" placeholder="Arrival ICAO (e.g. YMML)" required />
+    <label>Scheduled Departure</label>
     <input type="datetime-local" id="schedDep" required />
-    <label>ETA:</label>
+    <label>ETA</label>
     <input type="datetime-local" id="eta" required />
-    <button type="submit">📤 Submit</button>
+    <button type="submit">📤 Submit Flight</button>
   </form>
 
+  <!-- Flight List -->
   <div id="flightList"></div>
 
-  <!-- Scripts -->
-  <script src="airports.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <script src="app.js"></script>
-  <script src="map.js"></script>
 
 </body>
 </html>
