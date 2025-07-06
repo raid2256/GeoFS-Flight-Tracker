@@ -3,30 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flight Dashboard</title>
+  <title>GeoFS Radar Dashboard</title>
 
+  <!-- Style & Leaflet -->
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
 
-  <h1>🛫 Radar Dashboard</h1>
+  <h1>🛫 GeoFS Radar Dashboard</h1>
   <div id="userInfo"></div>
 
-  <!-- 🔍 MAP DISPLAY -->
+  <!-- Map -->
   <div id="map" style="height: 400px; margin-bottom: 30px;"></div>
 
-  <form id="flightForm" style="display: none;">
-    <!-- Your input fields (callsign, aircraft, ICAO codes, etc.) -->
+  <!-- Flight Form -->
+  <form id="flightForm" style="display:none;">
+    <h2>Submit Flight</h2>
+    <input type="text" id="callsign" placeholder="Callsign" required />
+    <input type="text" id="aircraft" placeholder="Aircraft" required />
+    <input type="text" id="dep" placeholder="Departure ICAO" required />
+    <input type="text" id="arr" placeholder="Arrival ICAO" required />
+    <label>Scheduled Departure:</label>
+    <input type="datetime-local" id="schedDep" required />
+    <label>ETA:</label>
+    <input type="datetime-local" id="eta" required />
+    <button type="submit">📤 Submit</button>
   </form>
 
   <div id="flightList"></div>
 
-  <!-- Firebase & App Logic -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <!-- Scripts -->
   <script src="airports.js"></script>
   <script src="app.js"></script>
   <script src="map.js"></script>
