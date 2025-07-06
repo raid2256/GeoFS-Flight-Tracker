@@ -1,3 +1,4 @@
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyATDhuV86g9Pa0r6remuusjO1-QLHWhEEI",
   authDomain: "geofs-radar-f163b.firebaseapp.com",
@@ -75,6 +76,8 @@ firebase.auth().onAuthStateChanged(user => {
         const sched = new Date(f.schedDep).getTime();
         const eta = new Date(f.eta).getTime();
         const start = f.timestamp || sched;
+        const end = f.endTime || null;
+
         const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
         const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
 
@@ -82,12 +85,19 @@ firebase.auth().onAuthStateChanged(user => {
         if (start > sched) status = "🔴 Delayed Departure";
         else if (now > eta) status = "🟡 Arriving Late";
 
+        const schedStart = formatTime(new Date(f.schedDep));
+        const schedEnd = formatTime(new Date(f.eta));
+        const actualStart = formatTime(new Date(start));
+        const actualEnd = end ? formatTime(new Date(end)) : null;
+
         const div = document.createElement("div");
         div.className = "flightCard";
         div.innerHTML = `
           👤 Pilot: <strong>${pilot}</strong><br>
           <strong>${f.callsign}</strong> | ${f.aircraft}<br>
-          🛫 ${f.dep} → 🛬 ${f.arr}
+          🛫 ${f.dep} → 🛬 ${f.arr}<br>
+          Scheduled: <s>${schedStart} → ${schedEnd}</s><br>
+          Actual: ${actualStart}${actualEnd ? " → " + actualEnd : ""}
           <div class="progressContainer">
             <div class="progressLabel">🕓 ${elapsed} min in flight</div>
             <div class="progressBar">
