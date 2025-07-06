@@ -12,35 +12,32 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Auth UI
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const usernameInput = document.getElementById("username"); // Username field
-const userInfo = document.getElementById("userInfo");
+function formatTime(date) {
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
 document.getElementById("loginBtn").onclick = () => {
   firebase.auth().signInWithEmailAndPassword(
-    emailInput.value.trim(),
-    passwordInput.value.trim()
+    email.value.trim(),
+    password.value.trim()
   ).catch(err => alert("Login Error: " + err.message));
 };
 
 document.getElementById("signupBtn").onclick = () => {
-  const email = emailInput.value.trim();
-  const password = passwordInput.value.trim();
-  const username = usernameInput.value.trim();
+  const emailVal = email.value.trim();
+  const passwordVal = password.value.trim();
+  const uname = username.value.trim();
 
-  if (!username) {
+  if (!uname) {
     alert("Please enter a username.");
     return;
   }
 
-  firebase.auth().createUserWithEmailAndPassword(email, password)
+  firebase.auth().createUserWithEmailAndPassword(emailVal, passwordVal)
     .then(cred => {
-      const uid = cred.user.uid;
-      return db.ref("users/" + uid).set({ username });
+      return db.ref("users/" + cred.user.uid).set({ username: uname });
     })
-    .then(() => alert("Account created! You're now signed in."))
+    .then(() => alert("Account created!"))
     .catch(err => alert("Signup Error: " + err.message));
 };
 
@@ -55,15 +52,14 @@ firebase.auth().onAuthStateChanged(user => {
     return;
   }
 
-  flightForm.style.display = "block";
-
   db.ref("users/" + user.uid + "/username").once("value").then(snap => {
-    const uname = snap.val() || "Unknown Pilot";
+    const uname = snap.val() || "Pilot";
     userInfo.innerHTML = `👤 Welcome, <strong>${uname}</strong><br>${user.email}`;
   });
 
-  // Submit new flight
-  document.getElementById("flightForm").addEventListener("submit", e => {
+  flightForm.style.display = "block";
+
+  flightForm.onsubmit = e => {
     e.preventDefault();
     const data = {
       callsign: callsign.value,
@@ -78,9 +74,8 @@ firebase.auth().onAuthStateChanged(user => {
     const id = "FLT_" + Date.now();
     db.ref("flights/" + id).set(data);
     flightForm.reset();
-  });
+  };
 
-  // Display ALL active flights with usernames
   db.ref("flights").on("value", snap => {
     flightList.innerHTML = "";
     const now = Date.now();
@@ -91,10 +86,11 @@ firebase.auth().onAuthStateChanged(user => {
 
       db.ref("users/" + f.uid + "/username").once("value").then(userSnap => {
         const pilotName = userSnap.val() || "Unknown Pilot";
-
         const sched = new Date(f.schedDep).getTime();
         const eta = new Date(f.eta).getTime();
         const start = f.timestamp || sched;
+        const end = f.endTime || null;
+
         const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
         const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
 
@@ -103,12 +99,19 @@ firebase.auth().onAuthStateChanged(user => {
         else if (now > eta) status = "🟡 Arriving Late";
         else status = "🟢 On Time";
 
+        const schedStart = formatTime(new Date(f.schedDep));
+        const schedEnd = formatTime(new Date(f.eta));
+        const actualStart = formatTime(new Date(start));
+        const actualEnd = end ? formatTime(new Date(end)) : null;
+
         const div = document.createElement("div");
         div.className = "flightCard";
         div.innerHTML = `
           👤 Pilot: <strong>${pilotName}</strong><br>
           <strong>${f.callsign}</strong> | ${f.aircraft}<br>
-          🛫 ${f.dep} → 🛬 ${f.arr}
+          🛫 ${f.dep} → 🛬 ${f.arr}<br>
+          Scheduled: <s>${schedStart} → ${schedEnd}</s><br>
+          Actual: ${actualStart}${actualEnd ? " → " + actualEnd : ""}
           <div class="progressContainer">
             <div class="progressLabel">🕓 ${elapsed} min in flight</div>
             <div class="progressBar">
@@ -118,7 +121,6 @@ firebase.auth().onAuthStateChanged(user => {
           Status: ${status}
         `;
 
-        // Only show "End Flight" if it's your flight
         if (f.uid === user.uid) {
           const endBtn = document.createElement("button");
           endBtn.textContent = "✅ End Flight";
