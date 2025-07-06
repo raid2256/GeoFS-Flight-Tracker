@@ -1,11 +1,11 @@
 const flightList = document.getElementById("flightList");
 
-// Time formatter for readable output
+// Time formatter
 function formatTime(date) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// Load all active (not completed) flights
+// Load public flight data
 firebase.database().ref("flights").on("value", snapshot => {
   const flights = snapshot.val() || {};
   flightList.innerHTML = "";
@@ -22,18 +22,18 @@ firebase.database().ref("flights").on("value", snapshot => {
       const start = f.timestamp || sched;
       const end = f.endTime || null;
 
+      const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
+      const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
+
+      // Status
+      let status = "🟢 On Time";
+      if (start > sched) status = "🔴 Delayed Departure";
+      else if (now > eta) status = "🟡 Arriving Late";
+
       const schedStart = formatTime(new Date(f.schedDep));
       const schedEnd = formatTime(new Date(f.eta));
       const actualStart = formatTime(new Date(start));
       const actualEnd = end ? formatTime(new Date(end)) : null;
-
-      const progress = Math.min(100, Math.max(0, ((now - sched) / (eta - sched)) * 100));
-      const elapsed = Math.round((progress / 100) * (eta - sched) / 60000);
-
-      let status;
-      if (start > sched) status = "🔴 Delayed Departure";
-      else if (now > eta) status = "🟡 Arriving Late";
-      else status = "🟢 On Time";
 
       const div = document.createElement("div");
       div.className = "flightCard";
