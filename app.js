@@ -88,32 +88,36 @@ firebase.auth().onAuthStateChanged(user => {
         card.className = "flightCard";
 
         if (!f.started) {
-          const timeUntil = Math.round((sched - now) / 60000);
-          card.innerHTML = `
-            👤 Pilot: <strong>${pilot}</strong><br>
-            <strong>${f.callsign}</strong> | ${f.aircraft}<br>
-            🛫 ${f.dep} → 🛬 ${f.arr}<br>
-            Scheduled Departure: ${formatTime(sched)}<br>
-            Duration: ${f.durationMin} min<br>
-            Status: 🕒 Scheduled, ${timeUntil > 0 ? `in ${timeUntil} min` : "ready to start"}
-          `;
+          const timeUntil = Math.round((sched - now) / 60000); // Minutes until scheduled
 
-          if (isMine) {
-            const startBtn = document.createElement("button");
-            startBtn.textContent = "✅ Start Flight";
-            startBtn.onclick = () => {
-              const actualStart = Date.now();
-              const newEta = actualStart + f.durationMin * 60000;
-              db.ref("flights/" + id).update({
-                started: true,
-                actualStart,
-                eta: newEta
-              });
-            };
-            card.appendChild(startBtn);
+          // Only show if scheduled departure is within next 24 hours
+          if (timeUntil <= 1440 && timeUntil >= 0) {
+            card.innerHTML = `
+              👤 Pilot: <strong>${pilot}</strong><br>
+              <strong>${f.callsign}</strong> | ${f.aircraft}<br>
+              🛫 ${f.dep} → 🛬 ${f.arr}<br>
+              Scheduled Departure: ${formatTime(sched)}<br>
+              Duration: ${f.durationMin} min<br>
+              Status: 🕒 Scheduled, ${timeUntil > 0 ? `in ${timeUntil} min` : "ready to start"}
+            `;
+
+            if (isMine) {
+              const startBtn = document.createElement("button");
+              startBtn.textContent = "✅ Start Flight";
+              startBtn.onclick = () => {
+                const actualStart = Date.now();
+                const newEta = actualStart + f.durationMin * 60000;
+                db.ref("flights/" + id).update({
+                  started: true,
+                  actualStart,
+                  eta: newEta
+                });
+              };
+              card.appendChild(startBtn);
+            }
+
+            schedList.appendChild(card);
           }
-
-          if (timeUntil >= 1440) schedList.appendChild(card); // 24h in minutes
         } else {
           const pct = Math.min(100, Math.max(0, ((now - start) / (eta - start)) * 100));
           const elapsed = Math.round((pct / 100) * (eta - start) / 60000);
