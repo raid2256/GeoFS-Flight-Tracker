@@ -23,21 +23,22 @@
 
   <!-- Flight Form -->
   <form id="flightForm" style="display: none;">
-    <h2>✈️ Submit Flight</h2>
+    <h2>✈️ Schedule Flight</h2>
     <input type="text" id="callsign" placeholder="Callsign" required />
     <input type="text" id="aircraft" placeholder="Aircraft" required />
     <input type="text" id="dep" placeholder="Departure ICAO (e.g. YSSY)" required />
     <input type="text" id="arr" placeholder="Arrival ICAO (e.g. YMML)" required />
     <label>Scheduled Departure</label>
     <input type="datetime-local" id="schedDep" required />
-    <label>ETA</label>
-    <input type="datetime-local" id="eta" required />
-    <button type="submit">📤 Submit Flight</button>
+    <label>Duration (minutes)</label>
+    <input type="number" id="durationMin" min="1" required />
+    <button type="submit">📅 Schedule Flight</button>
   </form>
 
-  <!-- Flight List -->
-  <div id="flightList"></div>
+  <div id="scheduledFlights"></div>
+  <div id="activeFlights"></div>
 
+  <!-- Firebase & App Logic -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
