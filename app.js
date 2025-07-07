@@ -76,6 +76,7 @@ firebase.auth().onAuthStateChanged(user => {
 
     Object.entries(flights).forEach(([id, f]) => {
       if (f.completed) return;
+
       db.ref("users/" + f.uid + "/username").once("value").then(uSnap => {
         const pilot = uSnap.val() || "Unknown";
         const sched = new Date(f.schedDep).getTime();
@@ -83,7 +84,7 @@ firebase.auth().onAuthStateChanged(user => {
         const eta = f.eta || (f.actualStart ? f.actualStart + f.durationMin * 60000 : null);
         const isMine = f.uid === user.uid;
 
-        let card = document.createElement("div");
+        const card = document.createElement("div");
         card.className = "flightCard";
 
         if (!f.started) {
@@ -138,11 +139,11 @@ firebase.auth().onAuthStateChanged(user => {
             const endBtn = document.createElement("button");
             endBtn.textContent = "✅ End Flight";
             endBtn.onclick = () => {
-  const endTime = Date.now();
-  const delay = start > sched ? start - sched : 0;
-  const duration = endTime - start;
+              const endTime = Date.now();
+              const delay = start > sched ? start - sched : 0;
+              const duration = endTime - start;
 
-  alert(`🧾 Flight Summary:
+              alert(`🧾 Flight Summary:
 Callsign: ${f.callsign}
 Aircraft: ${f.aircraft}
 Pilot: ${pilot}
@@ -151,8 +152,17 @@ Status: ${status}
 Flight Duration: ${(duration / 60000).toFixed(0)} min
 Delay: ${delay > 0 ? "+" + (delay / 60000).toFixed(0) + " min" : "None"}`);
 
-  db.ref("flights/" + id).update({
-    completed: true,
-    endTime
+              db.ref("flights/" + id).update({
+                completed: true,
+                endTime
+              });
+            };
+            card.appendChild(endBtn);
+          }
+
+          actList.appendChild(card);
+        }
+      });
+    });
   });
-};
+});
