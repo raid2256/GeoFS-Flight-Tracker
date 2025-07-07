@@ -138,4 +138,21 @@ firebase.auth().onAuthStateChanged(user => {
             const endBtn = document.createElement("button");
             endBtn.textContent = "✅ End Flight";
             endBtn.onclick = () => {
-              const endTime = Date
+  const endTime = Date.now();
+  const delay = start > sched ? start - sched : 0;
+  const duration = endTime - start;
+
+  alert(`🧾 Flight Summary:
+Callsign: ${f.callsign}
+Aircraft: ${f.aircraft}
+Pilot: ${pilot}
+Route: ${f.dep} → ${f.arr}
+Status: ${status}
+Flight Duration: ${(duration / 60000).toFixed(0)} min
+Delay: ${delay > 0 ? "+" + (delay / 60000).toFixed(0) + " min" : "None"}`);
+
+  db.ref("flights/" + id).update({
+    completed: true,
+    endTime
+  });
+};
